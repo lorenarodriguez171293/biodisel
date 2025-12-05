@@ -1,261 +1,521 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>App – Simulador de Biocombustibles</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simulador de Biocombustibles — Etanol / Biodiésel / Biogás</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-body {
-    margin: 0;
-    font-family: "Montserrat", sans-serif;
-    background: #0a0a0e;
-    color: #fff;
-}
-
-header {
-    padding: 25px;
-    text-align: center;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-}
-
-.app-container {
-    padding: 18px;
-    max-width: 450px;
-    margin: auto;
-}
-
-.card {
-    background: rgba(255,255,255,0.09);
-    padding: 18px;
-    border-radius: 20px;
-    margin-bottom: 24px;
-    backdrop-filter: blur(12px);
-}
-
-label {
-    font-weight: 600;
-    font-size: 0.95em;
-}
-
-select, input[type=range] {
-    width: 100%;
-    margin-top: 8px;
-    border: none;
-    border-radius: 12px;
-    padding: 10px;
-}
-
-.result-box {
-    margin-top: 18px;
-    padding: 15px;
-    background: rgba(255,255,255,0.07);
-    border-radius: 15px;
-}
-
-.animation-box {
-    width: 100%;
-    height: 220px;
-    position: relative;
-    margin: 15px 0;
-    background: #111;
-    border-radius: 18px;
-    overflow: hidden;
-}
-
-/* IMÁGENES */
-.obj {
-    position: absolute;
-    bottom: 10px;
-}
-
-.soja {
-    left: 10px;
-    width: 85px;
-    animation: grow 4s infinite alternate ease-in-out;
-}
-
-.petroleo {
-    right: 10px;
-    width: 70px;
-    animation: pulse 3.5s infinite ease-in-out;
-}
-
-.blend-ball {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 95px;
-    height: 95px;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: linear-gradient(45deg, #4caf50, #666);
-    animation: morph 5s infinite ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 20px;
-}
-
-/* Animaciones */
-@keyframes grow {
-    from { transform: scale(0.9); }
-    to   { transform: scale(1.1); }
-}
-
-@keyframes pulse {
-    0%  { transform: scale(1); opacity: .8; }
-    50% { transform: scale(1.1); opacity: 1; }
-    100%{ transform: scale(1); opacity: .8; }
-}
-
-@keyframes morph {
-    0% { border-radius: 45%; }
-    50% { border-radius: 55%; }
-    100% { border-radius: 45%; }
-}
-</style>
+  <style>
+    :root{
+      --accent:#0b74de;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f4f7fb;
+      --glass: rgba(255,255,255,0.9);
+      --shadow: 0 6px 18px rgba(20,30,50,0.08);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    body{
+      margin:0;
+      background: linear-gradient(180deg,#eef6ff 0%, #f4f7fb 100%);
+      color:#123;
+      -webkit-font-smoothing:antialiased;
+    }
+    .container{
+      max-width:1100px;
+      margin:28px auto;
+      padding:20px;
+    }
+    header{ display:flex; gap:16px; align-items:center; margin-bottom:18px;}
+    header h1{ margin:0; font-size:20px;}
+    .grid{
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap:18px;
+    }
+    .card{
+      background:var(--glass);
+      border-radius:12px;
+      padding:16px;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(0,0,0,0.03);
+    }
+    label{ display:block; font-size:13px; margin-bottom:6px; color:var(--muted);}
+    input[type="range"]{ width:100%; }
+    .row{ display:flex; gap:8px; align-items:center; margin-bottom:10px;}
+    .row .small{font-size:13px; color:var(--muted);}
+    .controls{ max-height:70vh; overflow:auto; padding-right:6px;}
+    .out{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .metric{
+      background:#fff;
+      padding:12px;
+      border-radius:10px;
+      min-width:170px;
+      box-shadow: 0 4px 12px rgba(10,20,40,0.04);
+    }
+    .metric .val{ font-size:18px; font-weight:700; color:var(--accent); }
+    .muted{ color:var(--muted); font-size:13px;}
+    select,input[type=number],input[type=text]{ width:100%; padding:8px; border-radius:8px; border:1px solid #e3eefc; font-size:14px;}
+    button{ background:var(--accent); color:white; border:0; padding:10px 12px; border-radius:8px; cursor:pointer;}
+    footer{ margin-top:14px; font-size:12px; color:var(--muted); }
+    .process-step{ display:flex; gap:10px; align-items:center; margin-bottom:8px;}
+    .progress{ height:10px; background:#e8f1ff; border-radius:8px; overflow:hidden; flex:1;}
+    .progress > i{ display:block; height:100%; background:linear-gradient(90deg,var(--accent), #3aa0ff); width:0%;}
+    .help{ font-size:13px; color:var(--muted); margin-top:8px;}
+    @media (max-width:980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Simulador educativo de biocombustibles</h1>
+        <div class="muted">Etanol • Biodiésel • Biogás — cálculo de energía, proceso y emisiones</div>
+      </div>
+    </header>
 
-<header>
-    <h1>App – Biocombustibles</h1>
-    <p>Blend, emisiones y análisis mensual</p>
-</header>
+    <div class="grid">
+      <!-- LEFT: Controls -->
+      <div class="card controls" id="controls">
 
-<div class="app-container">
-
-    <!-- SIMULADOR PRINCIPAL -->
-    <div class="card">
-
-        <h2>Blend de Biocombustible</h2>
-
-        <!-- Animación -->
-        <div class="animation-box">
-            <img src="https://i.imgur.com/8jy9uIg.png" class="obj soja">
-            <img src="https://i.imgur.com/1Djhx0C.png" class="obj petroleo">
-            <div class="blend-ball" id="blendBall">20%</div>
-        </div>
-
-        <label>Tipo de combustible fósil</label>
+        <h3>1) Selección y parámetros generales</h3>
+        <label>Tipo de biocombustible</label>
         <select id="fuelType">
-            <option value="diesel">Diésel</option>
-            <option value="nafta">Nafta</option>
+          <option value="ethanol">Etanol (fermentación)</option>
+          <option value="biodiesel">Biodiésel (transesterificación)</option>
+          <option value="biogas">Biogás (digestión anaerobia)</option>
         </select>
 
-        <label>Porcentaje de biocombustible (Blend %)</label>
-        <input type="range" min="0" max="100" value="20" id="blendSlider">
+        <label style="margin-top:10px">Cantidad de materia prima</label>
+        <div class="row">
+          <input type="number" id="feedMass" min="0" value="1000"> 
+          <div class="small">kg</div>
+        </div>
+        <div class="help">Introduce la masa de materia prima (kg). Ej: toneladas = 1000 kg.</div>
 
-        <div class="result-box">
-            <p><b>Reducción estimada de CO₂:</b> <span id="co2Reduction">0</span> %</p>
+        <hr style="margin:12px 0; border:none; border-top:1px solid #e6f0ff;">
+
+        <h3>2) Parámetros específicos del proceso (valores editables)</h3>
+
+        <!-- ETHANOL -->
+        <div id="ethanolParams">
+          <label>Contenido fermentable (azúcares) en materia prima (%)</label>
+          <input type="range" id="ethanolSugarPct" min="0" max="50" value="12">
+          <div class="row"><div class="small">Azúcar: <span id="ethanolSugarPctVal">12</span>%</div></div>
+
+          <label>Rendimiento de conversión azúcar → etanol (kg etanol / kg azúcar)</label>
+          <input type="range" id="ethanolYield" min="0.3" max="0.6" step="0.01" value="0.51">
+          <div class="row"><div class="small">Rendimiento: <span id="ethanolYieldVal">0.51</span> kg/kg</div></div>
+
+          <label>Densidad energética etanol</label>
+          <div class="row">
+            <input type="number" id="ethanolEnergyDensity" value="21.1" step="0.1">
+            <div class="small">MJ / L</div>
+          </div>
+          <label>Densidad etanol</label>
+          <div class="row">
+            <input type="number" id="ethanolDensity" value="0.789" step="0.001">
+            <div class="small">kg / L</div>
+          </div>
         </div>
 
-        <div class="result-box">
-            <p><b>Consumo mensual estimado:</b> <span id="litrosMes">450</span> L</p>
-            <p><b>CO₂ evitado al mes:</b> <span id="co2Mes">0</span> kg</p>
-            <p><b>CO₂ evitado al año:</b> <span id="co2Anual">0</span> kg</p>
+        <!-- BIODIESEL -->
+        <div id="biodieselParams" style="display:none;">
+          <label>Contenido de aceite en materia prima (%)</label>
+          <input type="range" id="oilPct" min="0" max="100" value="20">
+          <div class="row"><div class="small">Aceite: <span id="oilPctVal">20</span>%</div></div>
+
+          <label>Rendimiento conversión aceite → biodiésel (kg biodiesel / kg aceite)</label>
+          <input type="range" id="biodieselYield" min="0.7" max="1.0" step="0.01" value="0.98">
+          <div class="row"><div class="small">Rendimiento: <span id="biodieselYieldVal">0.98</span> kg/kg</div></div>
+
+          <label>Densidad energética biodiésel</label>
+          <div class="row">
+            <input type="number" id="biodieselEnergyDensity" value="33.3" step="0.1">
+            <div class="small">MJ / L</div>
+          </div>
+          <label>Densidad biodiésel</label>
+          <div class="row">
+            <input type="number" id="biodieselDensity" value="0.88" step="0.01">
+            <div class="small">kg / L</div>
+          </div>
         </div>
 
-    </div>
+        <!-- BIOGAS -->
+        <div id="biogasParams" style="display:none;">
+          <label>Producción específica de biogás</label>
+          <div class="row">
+            <input type="number" id="biogasYieldPerKg" value="0.15" step="0.01">
+            <div class="small">m³ biogás / kg materia</div>
+          </div>
 
-    <!-- GRAFICO -->
-    <div class="card">
-        <h2>CO₂ evitado por mes</h2>
-        <canvas id="biomassChart"></canvas>
-    </div>
+          <label>Contenido energético del biogás</label>
+          <div class="row">
+            <input type="number" id="biogasEnergyDensity" value="20" step="0.1">
+            <div class="small">MJ / m³ (aprox.)</div>
+          </div>
+        </div>
 
-</div>
+        <hr style="margin:12px 0; border:none; border-top:1px solid #e6f0ff;">
+
+        <h3>3) Factores de emisión (editables)</h3>
+        <div class="muted">Se usan para estimar emisiones y ahorro relativo. Son valores aproximados; modificalos si tenés datos propios.</div>
+
+        <label>Factor de emisión combustible fósil de referencia</label>
+        <div class="row">
+          <input type="number" id="fossilEF" value="90" step="1">
+          <div class="small">g CO₂e / MJ</div>
+        </div>
+
+        <label>Factor de emisión biocombustible (valor neto estimado)</label>
+        <div class="row">
+          <input type="number" id="bioEF" value="20" step="1">
+          <div class="small">g CO₂e / MJ</div>
+        </div>
+
+        <hr style="margin:12px 0; border:none; border-top:1px solid #e6f0ff;">
+
+        <button id="runBtn">Calcular simulación</button>
+
+        <div style="margin-top:12px;">
+          <strong>Proceso</strong>
+          <div class="process-step">
+            <div style="width:110px" class="small">Preparación</div><div class="progress"><i id="p1"></i></div>
+          </div>
+          <div class="process-step">
+            <div style="width:110px" class="small">Conversión</div><div class="progress"><i id="p2"></i></div>
+          </div>
+          <div class="process-step">
+            <div style="width:110px" class="small">Purificación</div><div class="progress"><i id="p3"></i></div>
+          </div>
+        </div>
+
+        <div class="help">Usá los sliders para ajustar los parámetros del proceso. Presioná <strong>Calcular simulación</strong> para actualizar resultados y gráficos.</div>
+
+      </div>
+
+      <!-- RIGHT: Results + Charts -->
+      <div>
+        <div class="card">
+          <h3>Resultados</h3>
+          <div class="out" id="resultsMetrics">
+            <div class="metric">
+              <div class="muted">Energía total producida</div>
+              <div class="val" id="energyTotal">— MJ</div>
+              <div class="muted">equivalente a <span id="energyLiters">—</span></div>
+            </div>
+
+            <div class="metric">
+              <div class="muted">Volumen / cantidad producida</div>
+              <div class="val" id="prodAmount">— L / m³ / kg</div>
+              <div class="muted" id="prodUnitDesc">—</div>
+            </div>
+
+            <div class="metric">
+              <div class="muted">Emisiones estimadas (biocombustible)</div>
+              <div class="val" id="emissionsBio">— kg CO₂e</div>
+              <div class="muted">Ahorro vs fósil: <span id="emissionsSaved">— kg CO₂e</span></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <canvas id="mainChart" height="140"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>Detalles de cálculo</h3>
+          <div id="detailTxt" class="muted" style="font-size:14px; line-height:1.5"></div>
+          <div style="margin-top:10px;">
+            <button id="exportBtn">Exportar resultados (CSV)</button>
+          </div>
+        </div>
+
+        <footer class="muted">
+          Valores por defecto aproximados y editables. Para uso profesional, ajustar parámetros según análisis de ciclo de vida y datos locales.
+        </footer>
+      </div>
+    </div>
+  </div>
 
 <script>
-//---------------------------------------
-// ANIMACIÓN BLEND – cambia color según %
-//---------------------------------------
-function updateBlendBall(percent) {
-    const ball = document.getElementById("blendBall");
-    ball.innerText = percent + "%";
+/*
+  Simulador de Biocombustibles (educativo)
+  - Calcula energía producida a partir de parámetros editables.
+  - Muestra comparación y estimación de emisiones.
+  - Gráficos con Chart.js
+  Notas: todos los resultados son aproximados y dependen de los datos introducidos.
+*/
 
-    // Gradiente dinámico (más verde cuanto mayor es el blend)
-    const greenLevel = percent / 100;
-    const grayLevel = 1 - greenLevel;
+// Helpers
+const $ = id => document.getElementById(id);
+function fmt(n, d=2){ return Number(n).toLocaleString(undefined, {maximumFractionDigits:d, minimumFractionDigits: d}); }
 
-    ball.style.background = `linear-gradient(45deg,
-        rgba(76,175,80, ${greenLevel}),
-        rgba(100,100,100, ${grayLevel})
-    )`;
-}
+// DOM elements
+const fuelType = $('fuelType');
+const feedMass = $('feedMass');
 
-//---------------------------------------
-// CÁLCULO DE EMISIONES
-//---------------------------------------
-function calcularReduccion(fuelType, blend) {
-    const base = fuelType === "diesel" ? 2.68 : 2.31; // kg CO₂ por litro
-    const reduccionPorcentaje = blend * 0.8; // reducción efectiva 80%
+const ethanolParams = $('ethanolParams');
+const biodieselParams = $('biodieselParams');
+const biogasParams = $('biogasParams');
 
-    return {
-        reduccionPorcentaje,
-        co2Mes: 450 * (base * (reduccionPorcentaje / 100)),
-        co2Anual: 12 * 450 * (base * (reduccionPorcentaje / 100))
-    };
-}
+const ethanolSugarPct = $('ethanolSugarPct');
+const ethanolSugarPctVal = $('ethanolSugarPctVal');
+const ethanolYield = $('ethanolYield');
+const ethanolYieldVal = $('ethanolYieldVal');
+const ethanolEnergyDensity = $('ethanolEnergyDensity');
+const ethanolDensity = $('ethanolDensity');
 
-//---------------------------------------
-// GRAFICO
-//---------------------------------------
-let ctx = document.getElementById("biomassChart");
-let biomassChart = new Chart(ctx, {
-    type: "line",
-    data: {
-        labels: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
-        datasets: [{
-            label: "CO₂ evitado (kg)",
-            backgroundColor: "#4caf5090",
-            borderColor: "#4caf50",
-            data: Array.from({length:12}, ()=>Math.random()*50+20),
-            tension: 0.4
-        }]
+const oilPct = $('oilPct'); const oilPctVal = $('oilPctVal');
+const biodieselYield = $('biodieselYield'); const biodieselYieldVal = $('biodieselYieldVal');
+const biodieselEnergyDensity = $('biodieselEnergyDensity'); const biodieselDensity = $('biodieselDensity');
+
+const biogasYieldPerKg = $('biogasYieldPerKg'); const biogasEnergyDensity = $('biogasEnergyDensity');
+
+const fossilEF = $('fossilEF'); const bioEF = $('bioEF');
+
+const runBtn = $('runBtn');
+
+const energyTotal = $('energyTotal');
+const energyLiters = $('energyLiters');
+const prodAmount = $('prodAmount');
+const prodUnitDesc = $('prodUnitDesc');
+const emissionsBio = $('emissionsBio');
+const emissionsSaved = $('emissionsSaved');
+const detailTxt = $('detailTxt');
+
+const p1 = $('p1'); const p2 = $('p2'); const p3 = $('p3');
+
+const exportBtn = $('exportBtn');
+
+// Chart
+let chart;
+function createChart(labels, values, colors){
+  const ctx = $('mainChart').getContext('2d');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: labels,
+      datasets:[{
+        label: 'Energía (MJ)',
+        data: values,
+        backgroundColor: colors || '#0b74de'
+      }]
     },
-    options: {
-        responsive: true,
-        scales: {
-            y: { beginAtZero: true }
-        }
+    options:{
+      responsive:true,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        y: { beginAtZero:true }
+      }
     }
+  });
+}
+
+// UI bindings
+fuelType.addEventListener('change', ()=> {
+  ethanolParams.style.display = (fuelType.value === 'ethanol') ? 'block' : 'none';
+  biodieselParams.style.display = (fuelType.value === 'biodiesel') ? 'block' : 'none';
+  biogasParams.style.display = (fuelType.value === 'biogas') ? 'block' : 'none';
 });
 
-//---------------------------------------
-// EVENTOS DE LA APP
-//---------------------------------------
-document.getElementById("blendSlider").addEventListener("input", actualizar);
-document.getElementById("fuelType").addEventListener("change", actualizar);
+ethanolSugarPct.addEventListener('input', ()=> ethanolSugarPctVal.textContent = ethanolSugarPct.value);
+ethanolYield.addEventListener('input', ()=> ethanolYieldVal.textContent = ethanolYield.value);
+oilPct.addEventListener('input', ()=> oilPctVal.textContent = oilPct.value);
+biodieselYield.addEventListener('input', ()=> biodieselYieldVal.textContent = biodieselYield.value);
 
-function actualizar() {
-    let blend = Number(document.getElementById("blendSlider").value);
-    let fuelType = document.getElementById("fuelType").value;
-
-    updateBlendBall(blend);
-
-    let r = calcularReduccion(fuelType, blend);
-
-    document.getElementById("co2Reduction").innerText = r.reduccionPorcentaje.toFixed(1);
-    document.getElementById("co2Mes").innerText = r.co2Mes.toFixed(1);
-    document.getElementById("co2Anual").innerText = r.co2Anual.toFixed(1);
-
-    // Actualizar gráfico
-    biomassChart.data.datasets[0].data =
-        Array.from({ length: 12 }, () => r.co2Mes * (0.7 + Math.random() * 0.6));
-
-    biomassChart.update();
+// Process bar animation
+function setProcess(p){
+  p1.style.width = (p.prep || 0) + '%';
+  p2.style.width = (p.conv || 0) + '%';
+  p3.style.width = (p.pur || 0) + '%';
 }
 
-// Inicializar visualmente
-actualizar();
-</script>
+// Core calculation function
+function calculate(){
+  // read inputs
+  const massKg = Number(feedMass.value) || 0;
+  const fossilEFval = Number(fossilEF.value) || 0; // g CO2e / MJ
+  const bioEFval = Number(bioEF.value) || 0; // g CO2e / MJ
 
+  let energyProduced_MJ = 0;
+  let producedVolume = 0; // L or m3 or kg
+  let producedUnit = '';
+  let detailLines = [];
+
+  if(fuelType.value === 'ethanol'){
+    const sugarPct = Number(ethanolSugarPct.value)/100; // fraction
+    const sugarKg = massKg * sugarPct;
+    const yieldKgPerKgSugar = Number(ethanolYield.value); // kg etanol / kg sugar
+    const ethanolKg = sugarKg * yieldKgPerKgSugar;
+    const density = Number(ethanolDensity.value); // kg/L
+    const ethanolL = (density>0) ? ethanolKg / density : 0;
+    const energyDensity = Number(ethanolEnergyDensity.value); // MJ/L
+    energyProduced_MJ = ethanolL * energyDensity;
+    producedVolume = ethanolL;
+    producedUnit = 'L etanol';
+
+    detailLines.push(`Masa insumo: ${fmt(massKg,0)} kg`);
+    detailLines.push(`Azúcar disponible: ${fmt(sugarKg,2)} kg (${fmt(sugarPct*100,2)}%)`);
+    detailLines.push(`Etanol producido: ${fmt(ethanolKg,2)} kg ≈ ${fmt(ethanolL,2)} L`);
+    detailLines.push(`Energía por L etanol: ${fmt(energyDensity,2)} MJ/L`);
+  }
+
+  if(fuelType.value === 'biodiesel'){
+    const oilPctValNum = Number(oilPct.value)/100;
+    const oilKg = massKg * oilPctValNum;
+    const yield = Number(biodieselYield.value); // kg biodiesel / kg oil
+    const biodieselKg = oilKg * yield;
+    const density = Number(biodieselDensity.value); // kg/L
+    const biodieselL = (density>0) ? biodieselKg / density : 0;
+    const energyDensity = Number(biodieselEnergyDensity.value); // MJ/L
+    energyProduced_MJ = biodieselL * energyDensity;
+    producedVolume = biodieselL;
+    producedUnit = 'L biodiésel';
+
+    detailLines.push(`Masa insumo: ${fmt(massKg,0)} kg`);
+    detailLines.push(`Aceite disponible: ${fmt(oilKg,2)} kg (${fmt(oilPctValNum*100,2)}%)`);
+    detailLines.push(`Biodiésel producido: ${fmt(biodieselKg,2)} kg ≈ ${fmt(biodieselL,2)} L`);
+    detailLines.push(`Energía por L biodiésel: ${fmt(energyDensity,2)} MJ/L`);
+  }
+
+  if(fuelType.value === 'biogas'){
+    const biogasYield = Number(biogasYieldPerKg.value); // m3/kg
+    const biogas_m3 = massKg * biogasYield;
+    const energyDensity = Number(biogasEnergyDensity.value); // MJ / m3
+    energyProduced_MJ = biogas_m3 * energyDensity;
+    producedVolume = biogas_m3;
+    producedUnit = 'm³ biogás';
+
+    detailLines.push(`Masa insumo: ${fmt(massKg,0)} kg`);
+    detailLines.push(`Biogás producido: ${fmt(biogas_m3,2)} m³ (yield ${fmt(biogasYield,3)} m³/kg)`);
+    detailLines.push(`Energía por m³ biogás: ${fmt(energyDensity,2)} MJ/m³`);
+  }
+
+  // Emisiones
+  // emission_fossil = energyProduced_MJ * fossilEFval (g CO2e)
+  // emission_bio = energyProduced_MJ * bioEFval (g CO2e)
+  const emissionFossil_g = energyProduced_MJ * fossilEFval;
+  const emissionBio_g = energyProduced_MJ * bioEFval;
+  const emissionSaved_g = Math.max(0, emissionFossil_g - emissionBio_g);
+
+  // Update UI
+  energyTotal.textContent = `${fmt(energyProduced_MJ,2)} MJ`;
+  energyLiters.textContent = (producedUnit.includes('L')) ? `${fmt(producedVolume,2)} L` : `${fmt(producedVolume,2)} ${producedUnit}`;
+  prodAmount.textContent = `${fmt(producedVolume,2)} ${producedUnit}`;
+  prodUnitDesc.textContent = (producedUnit==='L etanol' || producedUnit==='L biodiésel') ? 'Litros' : 'Metros cúbicos';
+
+  emissionsBio.textContent = `${fmt(emissionBio_g/1000,3)} kg CO₂e`;
+  emissionsSaved.textContent = `${fmt(emissionSaved_g/1000,3)} kg CO₂e`;
+
+  // Details
+  detailLines.push(`Energía total: ${fmt(energyProduced_MJ,2)} MJ`);
+  detailLines.push(`Emisiones (biocombustible): ${fmt(emissionBio_g/1000,3)} kg CO₂e`);
+  detailLines.push(`Emisiones (combustible fósil equivalente): ${fmt(emissionFossil_g/1000,3)} kg CO₂e`);
+  detailLines.push(`Ahorro estimado (fósil - bio): ${fmt(emissionSaved_g/1000,3)} kg CO₂e`);
+
+  detailTxt.innerHTML = detailLines.map(l=>`• ${l}`).join('<br/>');
+
+  // Chart: compare energy by fuel types (for comparison we estimate what would be if the same mass used for other fuels)
+  // We'll compute energies that could be produced by the same mass using default yields for each fuel:
+  const comparisons = computeComparisons(massKg);
+  createChart(comparisons.labels, comparisons.data);
+
+  // Animate process bars roughly proportional to yields/time
+  setProcess({prep:40, conv:70, pur:90});
+
+  // Return a results object for exporting
+  return {
+    massKg, energyProduced_MJ, producedVolume, producedUnit,
+    emissionBio_g, emissionFossil_g, emissionSaved_g,
+    details: detailLines
+  };
+}
+
+// For chart: produce energies for each fuel type using current parameters
+function computeComparisons(massKg){
+  // Ethanol
+  const sugarKg = massKg * (Number(ethanolSugarPct.value)/100);
+  const ethanolKg = sugarKg * Number(ethanolYield.value);
+  const ethanolL = (Number(ethanolDensity.value)>0) ? ethanolKg / Number(ethanolDensity.value) : 0;
+  const energyEthanol = ethanolL * Number(ethanolEnergyDensity.value);
+
+  // Biodiesel
+  const oilKg = massKg * (Number(oilPct.value)/100);
+  const biodieselKg = oilKg * Number(biodieselYield.value);
+  const biodieselL = (Number(biodieselDensity.value)>0) ? biodieselKg / Number(biodieselDensity.value) : 0;
+  const energyBiodiesel = biodieselL * Number(biodieselEnergyDensity.value);
+
+  // Biogas
+  const biogas_m3 = massKg * Number(biogasYieldPerKg.value);
+  const energyBiogas = biogas_m3 * Number(biogasEnergyDensity.value);
+
+  // Fossil equivalents: energy if same mass replaced by fossil fuel (we convert volume to MJ using diesel energy density)
+  // Use diesel energy density ~ 35.8 MJ/L for reference (informativo)
+  const dieselED = 35.8;
+  // For comparison, compute fossil energy equivalent to produced energy (not used further)
+  return {
+    labels: ['Etanol', 'Biodiésel', 'Biogás'],
+    data: [Number(energyEthanol.toFixed(3)), Number(energyBiodiesel.toFixed(3)), Number(energyBiogas.toFixed(3))]
+  };
+}
+
+// Export CSV
+exportBtn.addEventListener('click', ()=>{
+  const res = calculate();
+  const rows = [
+    ['Masa_insumo_kg', res.massKg],
+    ['Energia_MJ', res.energyProduced_MJ],
+    ['Cantidad_producida', res.producedVolume],
+    ['Unidad', res.producedUnit],
+    ['Emisiones_bio_g', res.emissionBio_g],
+    ['Emisiones_fossil_g', res.emissionFossil_g],
+    ['Emisiones_ahorro_g', res.emissionSaved_g]
+  ];
+  const csv = rows.map(r => r.join(',')).join('\\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'simulacion_biocombustible.csv';
+  document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+});
+
+// Run button
+runBtn.addEventListener('click', ()=>{
+  const r = calculate();
+});
+
+// initial chart
+createChart(['Etanol','Biodiésel','Biogás'], [0,0,0]);
+
+// Auto update when inputs change for immediate feedback (optional)
+[
+  ethanolSugarPct, ethanolYield, ethanolEnergyDensity, ethanolDensity,
+  oilPct, biodieselYield, biodieselEnergyDensity, biodieselDensity,
+  biogasYieldPerKg, biogasEnergyDensity, feedMass, fossilEF, bioEF
+].forEach(el => el.addEventListener('change', ()=> {
+  // small optimization: update only if visible or pressed run; here we auto-run
+  calculate();
+}));
+
+// set initial UI values
+ethanolSugarPctVal.textContent = ethanolSugarPct.value;
+ethanolYieldVal.textContent = ethanolYield.value;
+oilPctVal.textContent = oilPct.value;
+biodieselYieldVal.textContent = biodieselYield.value;
+
+</script>
 </body>
 </html>
+
