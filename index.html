@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador de Biocombustibles</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>App – Simulador de Biocombustibles</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,63 +11,113 @@
 <style>
 body {
     margin: 0;
-    background: #0a0a0e;
     font-family: "Montserrat", sans-serif;
-    color: #ffffff;
+    background: #0a0a0e;
+    color: #fff;
 }
 
 header {
-    padding: 35px;
+    padding: 25px;
     text-align: center;
     background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(10px);
 }
 
-.container {
-    max-width: 1100px;
+.app-container {
+    padding: 18px;
+    max-width: 450px;
     margin: auto;
-    padding: 20px;
 }
 
 .card {
-    background: rgba(255,255,255,0.08);
-    padding: 25px;
-    border-radius: 18px;
-    margin-bottom: 30px;
-    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.09);
+    padding: 18px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(12px);
 }
 
 label {
     font-weight: 600;
+    font-size: 0.95em;
 }
 
-input, select {
+select, input[type=range] {
     width: 100%;
-    padding: 10px;
-    margin-top: 7px;
-    border-radius: 10px;
+    margin-top: 8px;
     border: none;
+    border-radius: 12px;
+    padding: 10px;
 }
 
 .result-box {
-    margin-top: 15px;
+    margin-top: 18px;
     padding: 15px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 12px;
-}
-
-.illustration {
-    width: 100%;
+    background: rgba(255,255,255,0.07);
     border-radius: 15px;
-    margin-bottom: 15px;
 }
 
-/* Animación del tanque */
-#blendCanvas {
-    width: 100% !important;
-    height: auto !important;
+.animation-box {
+    width: 100%;
+    height: 220px;
+    position: relative;
+    margin: 15px 0;
     background: #111;
-    border-radius: 12px;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+/* IMÁGENES */
+.obj {
+    position: absolute;
+    bottom: 10px;
+}
+
+.soja {
+    left: 10px;
+    width: 85px;
+    animation: grow 4s infinite alternate ease-in-out;
+}
+
+.petroleo {
+    right: 10px;
+    width: 70px;
+    animation: pulse 3.5s infinite ease-in-out;
+}
+
+.blend-ball {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 95px;
+    height: 95px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: linear-gradient(45deg, #4caf50, #666);
+    animation: morph 5s infinite ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+/* Animaciones */
+@keyframes grow {
+    from { transform: scale(0.9); }
+    to   { transform: scale(1.1); }
+}
+
+@keyframes pulse {
+    0%  { transform: scale(1); opacity: .8; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100%{ transform: scale(1); opacity: .8; }
+}
+
+@keyframes morph {
+    0% { border-radius: 45%; }
+    50% { border-radius: 55%; }
+    100% { border-radius: 45%; }
 }
 </style>
 </head>
@@ -75,87 +125,77 @@ input, select {
 <body>
 
 <header>
-    <h1>Simulador Avanzado de Biocombustibles</h1>
-    <p>Calcula reducción de emisiones, mezcla y producción estimada</p>
+    <h1>App – Biocombustibles</h1>
+    <p>Blend, emisiones y análisis mensual</p>
 </header>
 
-<div class="container">
+<div class="app-container">
 
+    <!-- SIMULADOR PRINCIPAL -->
     <div class="card">
-        <img class="illustration" src="https://i.imgur.com/Y3gbFJj.jpeg">
 
-        <h2>Mezcla de Biocombustibles (Blend)</h2>
-        <label>Seleccionar tipo de combustible base:</label>
+        <h2>Blend de Biocombustible</h2>
+
+        <!-- Animación -->
+        <div class="animation-box">
+            <img src="https://i.imgur.com/8jy9uIg.png" class="obj soja">
+            <img src="https://i.imgur.com/1Djhx0C.png" class="obj petroleo">
+            <div class="blend-ball" id="blendBall">20%</div>
+        </div>
+
+        <label>Tipo de combustible fósil</label>
         <select id="fuelType">
             <option value="diesel">Diésel</option>
             <option value="nafta">Nafta</option>
         </select>
 
-        <label>Porcentaje de Biocombustible (Blend %):</label>
+        <label>Porcentaje de biocombustible (Blend %)</label>
         <input type="range" min="0" max="100" value="20" id="blendSlider">
-
-        <p><b>Blend actual:</b> <span id="blendValue">20%</span></p>
-
-        <canvas id="blendCanvas"></canvas>
 
         <div class="result-box">
             <p><b>Reducción estimada de CO₂:</b> <span id="co2Reduction">0</span> %</p>
         </div>
 
         <div class="result-box">
-            <p><b>Litros consumidos mensuales (estimado):</b> <span id="litrosMes">450</span> L</p>
+            <p><b>Consumo mensual estimado:</b> <span id="litrosMes">450</span> L</p>
             <p><b>CO₂ evitado al mes:</b> <span id="co2Mes">0</span> kg</p>
             <p><b>CO₂ evitado al año:</b> <span id="co2Anual">0</span> kg</p>
         </div>
+
     </div>
 
+    <!-- GRAFICO -->
     <div class="card">
-        <h2>Producción Estimada / Mezcla A lo Largo del Año</h2>
+        <h2>CO₂ evitado por mes</h2>
         <canvas id="biomassChart"></canvas>
     </div>
 
 </div>
 
 <script>
-//---------------------------
-// Animación del tanque
-//---------------------------
-const blendCanvas = document.getElementById("blendCanvas");
-const btx = blendCanvas.getContext("2d");
-blendCanvas.width = 600;
-blendCanvas.height = 260;
+//---------------------------------------
+// ANIMACIÓN BLEND – cambia color según %
+//---------------------------------------
+function updateBlendBall(percent) {
+    const ball = document.getElementById("blendBall");
+    ball.innerText = percent + "%";
 
-let animT = 0;
+    // Gradiente dinámico (más verde cuanto mayor es el blend)
+    const greenLevel = percent / 100;
+    const grayLevel = 1 - greenLevel;
 
-function drawBlend(blend) {
-    btx.fillStyle = "#000";
-    btx.fillRect(0, 0, blendCanvas.width, blendCanvas.height);
-
-    // Nivel del líquido (biocombustible)
-    let h = (blend / 100) * blendCanvas.height;
-
-    // Combustible fósil (base)
-    btx.fillStyle = "#444";
-    btx.fillRect(0, 0, blendCanvas.width, blendCanvas.height - h);
-
-    // Biocombustible - animado
-    for (let x = 0; x < blendCanvas.width; x++) {
-        let yWave = Math.sin((x + animT) * 0.05) * 4;
-        btx.fillStyle = "#4caf50";
-        btx.fillRect(x, blendCanvas.height - h + yWave, 1, h);
-    }
-
-    animT += 1;
-    requestAnimationFrame(() => drawBlend(blend));
+    ball.style.background = `linear-gradient(45deg,
+        rgba(76,175,80, ${greenLevel}),
+        rgba(100,100,100, ${grayLevel})
+    )`;
 }
 
-//-------------------------------------
-// Cálculos de emisiones
-//-------------------------------------
+//---------------------------------------
+// CÁLCULO DE EMISIONES
+//---------------------------------------
 function calcularReduccion(fuelType, blend) {
-    // Valores típicos de reducción por blend
-    const base = fuelType === "diesel" ? 2.68 : 2.31; // kg CO₂ / litro
-    const reduccionPorcentaje = blend * 0.8; // 80% del blend es reducción válida
+    const base = fuelType === "diesel" ? 2.68 : 2.31; // kg CO₂ por litro
+    const reduccionPorcentaje = blend * 0.8; // reducción efectiva 80%
 
     return {
         reduccionPorcentaje,
@@ -164,25 +204,33 @@ function calcularReduccion(fuelType, blend) {
     };
 }
 
-//-------------------------------------
-// Gráfico
-//-------------------------------------
+//---------------------------------------
+// GRAFICO
+//---------------------------------------
 let ctx = document.getElementById("biomassChart");
 let biomassChart = new Chart(ctx, {
-    type: "bar",
+    type: "line",
     data: {
         labels: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
         datasets: [{
             label: "CO₂ evitado (kg)",
-            backgroundColor: "#4caf50aa",
-            data: Array.from({length:12}, ()=>Math.random()*50+20)
+            backgroundColor: "#4caf5090",
+            borderColor: "#4caf50",
+            data: Array.from({length:12}, ()=>Math.random()*50+20),
+            tension: 0.4
         }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true }
+        }
     }
 });
 
-//-------------------------------------
-// Eventos
-//-------------------------------------
+//---------------------------------------
+// EVENTOS DE LA APP
+//---------------------------------------
 document.getElementById("blendSlider").addEventListener("input", actualizar);
 document.getElementById("fuelType").addEventListener("change", actualizar);
 
@@ -190,7 +238,7 @@ function actualizar() {
     let blend = Number(document.getElementById("blendSlider").value);
     let fuelType = document.getElementById("fuelType").value;
 
-    document.getElementById("blendValue").innerText = blend + "%";
+    updateBlendBall(blend);
 
     let r = calcularReduccion(fuelType, blend);
 
@@ -198,14 +246,15 @@ function actualizar() {
     document.getElementById("co2Mes").innerText = r.co2Mes.toFixed(1);
     document.getElementById("co2Anual").innerText = r.co2Anual.toFixed(1);
 
-    // actualizar gráfico
-    biomassChart.data.datasets[0].data = Array.from({length:12}, ()=>r.co2Mes * (0.6 + Math.random()*0.8));
+    // Actualizar gráfico
+    biomassChart.data.datasets[0].data =
+        Array.from({ length: 12 }, () => r.co2Mes * (0.7 + Math.random() * 0.6));
+
     biomassChart.update();
 }
 
-// Inicialización
+// Inicializar visualmente
 actualizar();
-drawBlend(20);
 </script>
 
 </body>
