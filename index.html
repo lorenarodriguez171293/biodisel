@@ -1,111 +1,69 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Producción de Bioetanol y Energía</title>
-    <style>
-        /* Estilos básicos */
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h1 { color: #f2891d; text-align: center; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        select, input[type="number"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #f2891d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
-        button:hover { background-color: #d8761a; }
-        #resultado { margin-top: 25px; padding: 15px; border: 1px solid #f2891d; border-radius: 4px; background-color: #fff7e6; font-size: 1.1em; }
-        #litros { font-size: 1.2em; color: #28a745; font-weight: bold; }
-        #energia { font-size: 1.2em; color: #007bff; font-weight: bold; }
-    </style>
-</head>
-<body>
+<!-- SIMULADOR BIODIÉSEL – NUEVO DISEÑO -->
+<section id="simulador-bio-v2" style="max-width: 800px; margin: 30px auto; padding: 20px; background: #f5fdf4; border-radius: 12px; border: 2px solid #a7d9a3;">
 
-<div class="container">
-    <h1>🌱 Simulador de Bioetanol y Energía</h1>
-    <p>Selecciona la materia prima y la cantidad para estimar la producción y la energía obtenida.</p>
+    <h2 style="text-align:center; margin-bottom:10px;">🌱 Simulador de Mezcla de Biocombustibles</h2>
+    <p style="text-align:center; font-size: 0.95em;">Ajustá el porcentaje de biodiésel para visualizar cómo cambia la mezcla y la reducción estimada de CO₂.</p>
 
-    
-    
-    <form id="simuladorForm">
-        <label for="materiaPrima">Materia Prima:</label>
-        <select id="materiaPrima" name="materiaPrima" required>
-            <option value="cana">Caña de Azúcar</option>
-            <option value="maiz">Maíz (Grano)</option>
-            <option value="remolacha">Remolacha Azucarera</option>
-        </select>
+    <!-- CONTENEDOR GRÁFICO -->
+    <div style="display: flex; justify-content: center; margin: 20px 0;">
+        <div style="width: 260px; height: 260px; position: relative; border-radius: 50%; overflow: hidden; border: 3px solid #4caf50;">
 
-        <label for="cantidad">Cantidad de Materia Prima (Toneladas - Ton):</label>
-        <input type="number" id="cantidad" name="cantidad" value="10" min="1" required>
+            <!-- FÓSIL -->
+            <div id="fossilCircle"
+                 style="position:absolute; bottom:0; width:100%; height:75%; background:#4e342e; transition:all .6s;">
+            </div>
 
-        <button type="submit">Calcular Energía y Producción</button>
-    </form>
+            <!-- BIO -->
+            <div id="bioCircle"
+                 style="position:absolute; bottom:0; width:100%; height:25%; background:#aed581; transition:all .6s;">
+            </div>
 
-    <div id="resultado">
-        El resultado aparecerá aquí.
+        </div>
     </div>
 
-</div>
+    <!-- LEYENDAS -->
+    <div style="display:flex; justify-content:center; gap:20px; margin-bottom:20px; font-size:0.9em;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:18px; height:18px; background:#4e342e;"></div> Fósil
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:18px; height:18px; background:#aed581;"></div> Biodiésel
+        </div>
+    </div>
+
+    <!-- CONTROL -->
+    <div style="text-align:center;">
+        <label for="blend2" style="font-weight:bold;">Porcentaje de Biodiésel (B%)</label><br>
+        <input type="range" id="blend2" min="0" max="30" value="10" step="1" style="width:80%; margin-top:10px;">
+        <p style="margin-top:10px;">Mezcla actual: <strong><span id="blendValue">10</span>%</strong></p>
+    </div>
+
+    <!-- RESULTADO -->
+    <div style="margin-top:20px; text-align:center; font-size:1.1em; background:#e8f5e9; padding:15px; border-radius:8px; border:1px solid #a5d6a7;">
+        Reducción estimada de CO₂:  
+        <strong><span id="co2Value">0.18</span> kg/L</strong>
+    </div>
+
+</section>
 
 <script>
-    document.getElementById('simuladorForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    function updateBioSim() {
+        const percent = parseInt(document.getElementById("blend2").value);
+        document.getElementById("blendValue").textContent = percent;
 
-        const materiaPrima = document.getElementById('materiaPrima').value;
-        const cantidadTon = parseFloat(document.getElementById('cantidad').value);
+        const fossil = 100 - percent;
 
-        // 1. Definir factores de conversión (L/Ton)
-        let rendimiento_L_por_Ton;
-        let nombreMateriaPrima;
-        
-        switch (materiaPrima) {
-            case 'cana':
-                rendimiento_L_por_Ton = 80; // 80 L de Etanol por Tonelada de caña
-                nombreMateriaPrima = 'Caña de Azúcar';
-                break;
-            case 'maiz':
-                rendimiento_L_por_Ton = 400; // 400 L de Etanol por Tonelada de grano de maíz
-                nombreMateriaPrima = 'Maíz (Grano)';
-                break;
-            case 'remolacha':
-                rendimiento_L_por_Ton = 90; // 90 L de Etanol por Tonelada de remolacha
-                break;
-            default:
-                document.getElementById('resultado').innerHTML = "Error: Materia prima no seleccionada.";
-                return;
-        }
+        // actualiza alturas del gráfico circular vertical
+        document.getElementById("bioCircle").style.height = percent + "%";
+        document.getElementById("fossilCircle").style.height = fossil + "%";
 
-        // 2. Factores de eficiencia y pérdidas
-        const eficienciaDestilacion = 0.98;
-        const perdidasProceso = 0.05; 
-        
-        // 3. Constante para cálculo de Energía
-        // Poder Calorífico Inferior (PCI) del Etanol (~99.5% de pureza)
-        // El etanol tiene un PCI de aproximadamente 26.8 MJ/kg.
-        // Densidad del Etanol (~0.789 kg/L)
-        const PCI_etanol_MJ_L = 21.15; // Aproximadamente 21.15 Megajulios por Litro (26.8 MJ/kg * 0.789 kg/L)
+        // cálculo simple de reducción CO2
+        const reduction = percent * 0.018; 
+        document.getElementById("co2Value").textContent = reduction.toFixed(2);
+    }
 
-        // 4. Cálculo de Producción de Bioetanol (Litros)
-        const produccionBruta = cantidadTon * rendimiento_L_por_Ton;
-        const **produccionNetaLitros** = produccionBruta * eficienciaDestilacion * (1 - perdidasProceso);
-        
-        // 5. Cálculo de Energía (Megajulios)
-        const **energiaTotalMJ** = produccionNetaLitros * PCI_etanol_MJ_L;
+    document.getElementById("blend2").addEventListener("input", updateBioSim);
 
-        // 6. Mostrar resultado en la página
-        const resultadoTexto = `
-            <h3>Resultados para ${cantidadTon} Toneladas de ${nombreMateriaPrima}:</h3>
-            <p>⛽ Producción Estimada de Bioetanol:</p>
-            <div id="litros">${produccionNetaLitros.toFixed(2)} Litros</div>
-            
-            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
-
-            <p>⚡ Energía Potencial Generada (Poder Calorífico Inferior):</p>
-            <div id="energia">${energiaTotalMJ.toFixed(2)} Megajulios (MJ)</div>
-        `;
-        
-        document.getElementById('resultado').innerHTML = resultadoTexto;
-    });
+    // Ejecuta al cargar
+    updateBioSim();
 </script>
-
-</body>
-</html>
