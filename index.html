@@ -3,33 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Producción de Biodiésel</title>
+    <title>Simulador de Producción de Bioetanol y Energía</title>
     <style>
-        /* Estilos básicos para la presentación */
+        /* Estilos básicos */
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
         .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h1 { color: #28a745; text-align: center; }
+        h1 { color: #f2891d; text-align: center; }
         label { display: block; margin-top: 15px; font-weight: bold; }
-        input[type="number"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
-        button:hover { background-color: #218838; }
-        #resultado { margin-top: 25px; padding: 15px; border: 1px solid #28a745; border-radius: 4px; background-color: #e6ffed; font-size: 1.1em; font-weight: bold; text-align: center; }
+        select, input[type="number"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #f2891d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
+        button:hover { background-color: #d8761a; }
+        #resultado { margin-top: 25px; padding: 15px; border: 1px solid #f2891d; border-radius: 4px; background-color: #fff7e6; font-size: 1.1em; }
+        #litros { font-size: 1.2em; color: #28a745; font-weight: bold; }
+        #energia { font-size: 1.2em; color: #007bff; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🌱 Simulador de Biodiésel</h1>
-    <p>Introduce las cantidades de reactivos para estimar la producción de Biodiésel (asumiendo una conversión estándar).</p>
+    <h1>🌱 Simulador de Bioetanol y Energía</h1>
+    <p>Selecciona la materia prima y la cantidad para estimar la producción y la energía obtenida.</p>
 
+    
+    
     <form id="simuladorForm">
-        <label for="aceite">Cantidad de Aceite (Litros):</label>
-        <input type="number" id="aceite" name="aceite" value="100" min="1" required>
+        <label for="materiaPrima">Materia Prima:</label>
+        <select id="materiaPrima" name="materiaPrima" required>
+            <option value="cana">Caña de Azúcar</option>
+            <option value="maiz">Maíz (Grano)</option>
+            <option value="remolacha">Remolacha Azucarera</option>
+        </select>
 
-        <label for="alcohol">Cantidad de Alcohol Metanol/Etanol (Litros):</label>
-        <input type="number" id="alcohol" name="alcohol" value="15" min="1" required>
+        <label for="cantidad">Cantidad de Materia Prima (Toneladas - Ton):</label>
+        <input type="number" id="cantidad" name="cantidad" value="10" min="1" required>
 
-        <button type="submit">Calcular Producción</button>
+        <button type="submit">Calcular Energía y Producción</button>
     </form>
 
     <div id="resultado">
@@ -40,43 +48,61 @@
 
 <script>
     document.getElementById('simuladorForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Previene el envío del formulario por defecto
+        e.preventDefault();
 
-        // 1. Obtener valores del formulario
-        const cantidadAceite = parseFloat(document.getElementById('aceite').value);
-        const cantidadAlcohol = parseFloat(document.getElementById('alcohol').value);
+        const materiaPrima = document.getElementById('materiaPrima').value;
+        const cantidadTon = parseFloat(document.getElementById('cantidad').value);
 
-        // 2. Definir factores de conversión y eficiencia
-        // Estos son valores aproximados y pueden variar según el proceso y la materia prima.
-        const rendimientoBiodieselPorAceite = 0.95; // 95% de Biodiésel del volumen de aceite
-        const proporcionAlcoholOptima = 0.10;     // Ratio óptimo: 10% de Alcohol por volumen de Aceite
-        const eficienciaProceso = 0.98;           // Eficiencia general del 98%
-
-        let resultadoTexto = "";
+        // 1. Definir factores de conversión (L/Ton)
+        let rendimiento_L_por_Ton;
+        let nombreMateriaPrima;
         
-        // 3. Realizar el cálculo del "reactivo limitante" (simplificado)
-        // Biodiésel basado en el aceite (el componente principal)
-        const biodieselPotencialAceite = cantidadAceite * rendimientoBiodieselPorAceite * eficienciaProceso;
-        
-        // Alcohol requerido para la cantidad de aceite
-        const alcoholRequerido = cantidadAceite * proporcionAlcoholOptima;
-
-        let biodieselFinal;
-
-        // 4. Lógica del simulador
-        if (cantidadAlcohol < alcoholRequerido) {
-            // Si hay poco alcohol, el alcohol es el reactivo limitante (simplificado)
-            // Se calcula el biodiesel basado en la proporción de alcohol disponible vs. requerida
-            const factorLimitante = cantidadAlcohol / alcoholRequerido;
-            biodieselFinal = biodieselPotencialAceite * factorLimitante;
-            resultadoTexto = `⚠️ **Alcohol Limitante:** Necesitarías ${alcoholRequerido.toFixed(2)} L de Alcohol. Solo se producirán ${biodieselFinal.toFixed(2)} L de Biodiésel.`;
-        } else {
-            // Si hay suficiente o exceso de alcohol, la producción se basa en el aceite
-            biodieselFinal = biodieselPotencialAceite;
-            resultadoTexto = `✅ **Producción Estimada:** Con ${cantidadAceite} L de Aceite, obtendrás aproximadamente **${biodieselFinal.toFixed(2)} L de Biodiésel**.`;
+        switch (materiaPrima) {
+            case 'cana':
+                rendimiento_L_por_Ton = 80; // 80 L de Etanol por Tonelada de caña
+                nombreMateriaPrima = 'Caña de Azúcar';
+                break;
+            case 'maiz':
+                rendimiento_L_por_Ton = 400; // 400 L de Etanol por Tonelada de grano de maíz
+                nombreMateriaPrima = 'Maíz (Grano)';
+                break;
+            case 'remolacha':
+                rendimiento_L_por_Ton = 90; // 90 L de Etanol por Tonelada de remolacha
+                break;
+            default:
+                document.getElementById('resultado').innerHTML = "Error: Materia prima no seleccionada.";
+                return;
         }
+
+        // 2. Factores de eficiencia y pérdidas
+        const eficienciaDestilacion = 0.98;
+        const perdidasProceso = 0.05; 
         
-        // 5. Mostrar resultado en la página
+        // 3. Constante para cálculo de Energía
+        // Poder Calorífico Inferior (PCI) del Etanol (~99.5% de pureza)
+        // El etanol tiene un PCI de aproximadamente 26.8 MJ/kg.
+        // Densidad del Etanol (~0.789 kg/L)
+        const PCI_etanol_MJ_L = 21.15; // Aproximadamente 21.15 Megajulios por Litro (26.8 MJ/kg * 0.789 kg/L)
+
+        // 4. Cálculo de Producción de Bioetanol (Litros)
+        const produccionBruta = cantidadTon * rendimiento_L_por_Ton;
+        const **produccionNetaLitros** = produccionBruta * eficienciaDestilacion * (1 - perdidasProceso);
+        
+        // 5. Cálculo de Energía (Megajulios)
+        const **energiaTotalMJ** = produccionNetaLitros * PCI_etanol_MJ_L;
+
+        // 6. Mostrar resultado en la página
+        const resultadoTexto = `
+            <h3>Resultados para ${cantidadTon} Toneladas de ${nombreMateriaPrima}:</h3>
+            <p>⛽ Producción Estimada de Bioetanol:</p>
+            <div id="litros">${produccionNetaLitros.toFixed(2)} Litros</div>
+            
+            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
+
+            <p>⚡ Energía Potencial Generada (Poder Calorífico Inferior):</p>
+            <div id="energia">${energiaTotalMJ.toFixed(2)} Megajulios (MJ)</div>
+        `;
+        
         document.getElementById('resultado').innerHTML = resultadoTexto;
     });
 </script>
