@@ -1,89 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<title>Simulador de Biocombustibles</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 30px;
-        background: #f4f4f4;
-    }
-    .contenedor {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        max-width: 500px;
-        margin: auto;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input { width: 100%; }
-    #resultado {
-        margin-top: 20px;
-        padding: 15px;
-        background: #e8f9e8;
-        border-left: 6px solid #22aa22;
-        border-radius: 6px;
-    }
-    canvas { margin-top: 25px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Producción de Biodiésel</title>
+    <style>
+        /* Estilos básicos para la presentación */
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h1 { color: #28a745; text-align: center; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input[type="number"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
+        button:hover { background-color: #218838; }
+        #resultado { margin-top: 25px; padding: 15px; border: 1px solid #28a745; border-radius: 4px; background-color: #e6ffed; font-size: 1.1em; font-weight: bold; text-align: center; }
+    </style>
 </head>
-
 <body>
-<div class="contenedor">
-    <h2>Simulador de Mezcla de Biocombustible</h2>
-    <p>Ajusta el porcentaje de materia orgánica (biocombustible) en la mezcla.</p>
 
-    <label>Materia orgánica (%): <span id="valor">0</span>%</label>
-    <input type="range" id="slider" min="0" max="100" value="0" />
+<div class="container">
+    <h1>🌱 Simulador de Biodiésel</h1>
+    <p>Introduce las cantidades de reactivos para estimar la producción de Biodiésel (asumiendo una conversión estándar).</p>
+
+    <form id="simuladorForm">
+        <label for="aceite">Cantidad de Aceite (Litros):</label>
+        <input type="number" id="aceite" name="aceite" value="100" min="1" required>
+
+        <label for="alcohol">Cantidad de Alcohol Metanol/Etanol (Litros):</label>
+        <input type="number" id="alcohol" name="alcohol" value="15" min="1" required>
+
+        <button type="submit">Calcular Producción</button>
+    </form>
 
     <div id="resultado">
-        <strong>Emisiones estimadas de CO₂:</strong>
-        <p id="emisiones">100%</p>
+        El resultado aparecerá aquí.
     </div>
 
-    <canvas id="grafico" width="400" height="200"></canvas>
 </div>
 
 <script>
-    const slider = document.getElementById("slider");
-    const valor = document.getElementById("valor");
-    const emisionesTexto = document.getElementById("emisiones");
-    const canvas = document.getElementById("grafico");
-    const ctx = canvas.getContext("2d");
+    document.getElementById('simuladorForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Previene el envío del formulario por defecto
 
-    function actualizar() {
-        const bio = Number(slider.value);
-        valor.textContent = bio;
+        // 1. Obtener valores del formulario
+        const cantidadAceite = parseFloat(document.getElementById('aceite').value);
+        const cantidadAlcohol = parseFloat(document.getElementById('alcohol').value);
 
-        // Fórmula educativa: cada 10% de biocombustible reduce 5% de CO2
-        const reduccion = bio * 0.5;
-        const emisiones = Math.max(100 - reduccion, 0);
+        // 2. Definir factores de conversión y eficiencia
+        // Estos son valores aproximados y pueden variar según el proceso y la materia prima.
+        const rendimientoBiodieselPorAceite = 0.95; // 95% de Biodiésel del volumen de aceite
+        const proporcionAlcoholOptima = 0.10;     // Ratio óptimo: 10% de Alcohol por volumen de Aceite
+        const eficienciaProceso = 0.98;           // Eficiencia general del 98%
 
-        emisionesTexto.textContent = emisiones.toFixed(1) + "%";
+        let resultadoTexto = "";
+        
+        // 3. Realizar el cálculo del "reactivo limitante" (simplificado)
+        // Biodiésel basado en el aceite (el componente principal)
+        const biodieselPotencialAceite = cantidadAceite * rendimientoBiodieselPorAceite * eficienciaProceso;
+        
+        // Alcohol requerido para la cantidad de aceite
+        const alcoholRequerido = cantidadAceite * proporcionAlcoholOptima;
 
-        dibujarGrafico(emisiones);
-    }
+        let biodieselFinal;
 
-    function dibujarGrafico(emisiones) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Barra base (100% emisiones fósiles)
-        ctx.fillStyle = "#cccccc";
-        ctx.fillRect(50, 50, 300, 30);
-
-        // Barra con mezcla
-        ctx.fillStyle = "#4CAF50";
-        const ancho = (emisiones / 100) * 300;
-        ctx.fillRect(50, 100, ancho, 30);
-
-        ctx.fillStyle = "#000";
-        ctx.fillText("100% (solo fósil)", 50, 45);
-        ctx.fillText(emisiones.toFixed(1) + "% (mezcla actual)", 50, 145);
-    }
-
-    slider.addEventListener("input", actualizar);
-    actualizar();
+        // 4. Lógica del simulador
+        if (cantidadAlcohol < alcoholRequerido) {
+            // Si hay poco alcohol, el alcohol es el reactivo limitante (simplificado)
+            // Se calcula el biodiesel basado en la proporción de alcohol disponible vs. requerida
+            const factorLimitante = cantidadAlcohol / alcoholRequerido;
+            biodieselFinal = biodieselPotencialAceite * factorLimitante;
+            resultadoTexto = `⚠️ **Alcohol Limitante:** Necesitarías ${alcoholRequerido.toFixed(2)} L de Alcohol. Solo se producirán ${biodieselFinal.toFixed(2)} L de Biodiésel.`;
+        } else {
+            // Si hay suficiente o exceso de alcohol, la producción se basa en el aceite
+            biodieselFinal = biodieselPotencialAceite;
+            resultadoTexto = `✅ **Producción Estimada:** Con ${cantidadAceite} L de Aceite, obtendrás aproximadamente **${biodieselFinal.toFixed(2)} L de Biodiésel**.`;
+        }
+        
+        // 5. Mostrar resultado en la página
+        document.getElementById('resultado').innerHTML = resultadoTexto;
+    });
 </script>
 
 </body>
