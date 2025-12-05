@@ -1,69 +1,249 @@
-<!-- SIMULADOR BIODIÉSEL – NUEVO DISEÑO -->
-<section id="simulador-bio-v2" style="max-width: 800px; margin: 30px auto; padding: 20px; background: #f5fdf4; border-radius: 12px; border: 2px solid #a7d9a3;">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Mezcla de Biocombustibles (B%)</title>
+    <style>
+        /* ESTILOS GENERALES Y LAYOUT */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; }
+        
+        #simulador-bio-v2 {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            background: #ffffff; /* Fondo blanco para mejor contraste */
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid #4CAF50; /* Borde verde más fuerte */
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #2e7d32; /* Verde oscuro */
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
 
-    <h2 style="text-align:center; margin-bottom:10px;">🌱 Simulador de Mezcla de Biocombustibles</h2>
-    <p style="text-align:center; font-size: 0.95em;">Ajustá el porcentaje de biodiésel para visualizar cómo cambia la mezcla y la reducción estimada de CO₂.</p>
+        /* GRÁFICO CIRCULAR VERTICAL */
+        .grafico-contenedor {
+            display: flex;
+            justify-content: center;
+            margin: 25px 0;
+        }
 
-    <!-- CONTENEDOR GRÁFICO -->
-    <div style="display: flex; justify-content: center; margin: 20px 0;">
-        <div style="width: 260px; height: 260px; position: relative; border-radius: 50%; overflow: hidden; border: 3px solid #4caf50;">
+        .grafico-circulo {
+            width: 250px;
+            height: 250px;
+            position: relative;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #4CAF50;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
 
-            <!-- FÓSIL -->
+        #fossilCircle, #bioCircle {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            transition: height 0.6s ease-in-out; /* Transición suave */
+        }
+
+        #fossilCircle {
+            background: #4e342e; /* Marrón oscuro para fósil */
+        }
+
+        #bioCircle {
+            background: #aed581; /* Verde claro para biodiésel */
+        }
+
+        /* LEYENDAS */
+        .leyendas {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            font-size: 1em;
+        }
+
+        .leyendas div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .leyendas div div {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        /* CONTROL SLIDER */
+        .control-slider {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f1f8e9; /* Fondo muy claro para el control */
+        }
+
+        input[type="range"] {
+            width: 90%;
+            margin-top: 15px;
+        }
+
+        /* RESULTADO */
+        #resultado-co2 {
+            margin-top: 25px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+        }
+
+        #resultado-co2 strong {
+            display: block;
+            margin-top: 5px;
+            font-size: 1.2em;
+        }
+
+        /* INFORMACIÓN ADICIONAL */
+        .info-adicional {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px dashed #a7d9a3;
+            border-radius: 10px;
+            background: #f9fff9;
+        }
+        
+        .info-adicional h3 {
+            color: #4caf50;
+            margin-top: 0;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+
+        .info-adicional ul {
+            list-style-type: '🌿 '; /* Emoji como bullet */
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<section id="simulador-bio-v2">
+
+    <h2>🌱 Simulador de Mezcla de Biocombustibles (B%)</h2>
+    <p style="text-align:center; font-size: 0.95em;">Ajusta el porcentaje de **Biodiésel (B)** en la mezcla para visualizar la composición y la reducción estimada de $\text{CO}_2$ en base al ciclo de vida.</p>
+
+    
+
+    <div class="grafico-contenedor">
+        <div class="grafico-circulo">
+
             <div id="fossilCircle"
-                 style="position:absolute; bottom:0; width:100%; height:75%; background:#4e342e; transition:all .6s;">
+                 style="position:absolute; bottom:0; width:100%; height:90%; background:#4e342e;">
             </div>
 
-            <!-- BIO -->
             <div id="bioCircle"
-                 style="position:absolute; bottom:0; width:100%; height:25%; background:#aed581; transition:all .6s;">
+                 style="position:absolute; bottom:0; width:100%; height:10%; background:#aed581;">
             </div>
-
         </div>
     </div>
 
-    <!-- LEYENDAS -->
-    <div style="display:flex; justify-content:center; gap:20px; margin-bottom:20px; font-size:0.9em;">
-        <div style="display:flex; align-items:center; gap:8px;">
-            <div style="width:18px; height:18px; background:#4e342e;"></div> Fósil
+    <div class="leyendas">
+        <div>
+            <div style="background:#4e342e;"></div> Diésel **Fósil**
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <div style="width:18px; height:18px; background:#aed581;"></div> Biodiésel
+        <div>
+            <div style="background:#aed581;"></div> **Biodiésel**
         </div>
     </div>
 
-    <!-- CONTROL -->
-    <div style="text-align:center;">
-        <label for="blend2" style="font-weight:bold;">Porcentaje de Biodiésel (B%)</label><br>
-        <input type="range" id="blend2" min="0" max="30" value="10" step="1" style="width:80%; margin-top:10px;">
-        <p style="margin-top:10px;">Mezcla actual: <strong><span id="blendValue">10</span>%</strong></p>
+    <div class="control-slider">
+        <label for="blend2" style="font-weight:bold; color:#2e7d32;">Porcentaje de Biodiésel (B%)</label><br>
+        <input type="range" id="blend2" min="0" max="30" value="10" step="1">
+        <p style="margin-top:10px;">Mezcla actual: **B<span id="blendValue">10</span>** (Contiene un **<span id="blendValue2">10</span>%** de Biodiésel)</p>
     </div>
 
-    <!-- RESULTADO -->
-    <div style="margin-top:20px; text-align:center; font-size:1.1em; background:#e8f5e9; padding:15px; border-radius:8px; border:1px solid #a5d6a7;">
-        Reducción estimada de CO₂:  
-        <strong><span id="co2Value">0.18</span> kg/L</strong>
+    <div id="resultado-co2">
+        Reducción de $\text{CO}_2$ por Litro:
+        <span id="co2Value">
+            <p style="margin: 0; font-size: 0.9em;">
+                Reducción **Absoluta** de $\text{CO}_2$: 
+                <strong style="color: #4CAF50;">0.248 kg/L</strong>
+            </p>
+            <p style="margin: 5px 0 0 0; font-size: 0.9em;">
+                Reducción **Porcentual** Total: 
+                <strong style="color: #009688;">9.25%</strong>
+            </p>
+        </span>
+    </div>
+
+    <div class="info-adicional">
+        <h3>Beneficios Clave del Biodiésel</h3>
+        <ul style="font-size:0.9em;">
+            <li>**Balance de Carbono:** El cálculo de reducción se basa en el **ciclo de vida**. El $\text{CO}_2$ liberado al quemar el biocombustible es compensado por el $\text{CO}_2$ que la planta absorbió al crecer.</li>
+            <li>**Emisiones Locales:** Reduce significativamente la emisión de material particulado (hollín) y de compuestos de azufre ($\text{SO}_2$).</li>
+            <li>**Lubricidad:** Mejora la calidad lubricante del combustible, lo que beneficia el desgaste de los componentes del motor.</li>
+        </ul>
     </div>
 
 </section>
 
 <script>
+    // CONSTANTES BASADAS EN DATOS ESTÁNDARES DE CICLO DE VIDA (aproximados)
+    const EMISION_DIESEL_FOSIL = 2.68; // kg CO2 por Litro (fósil puro)
+    const EMISION_BIODIESEL_NETA = 0.20; // kg CO2 (NETO) por Litro (incluyendo ciclo de vida)
+
     function updateBioSim() {
+        // 1. Obtener el porcentaje del slider
         const percent = parseInt(document.getElementById("blend2").value);
+        
+        // 2. Actualizar texto de la mezcla
         document.getElementById("blendValue").textContent = percent;
+        document.getElementById("blendValue2").textContent = percent;
 
-        const fossil = 100 - percent;
+        // 3. Cálculos de proporciones
+        const B = percent / 100; // Fracción de Biodiésel (ej: 0.10)
+        const D = 1 - B;         // Fracción de Diésel Fósil (ej: 0.90)
 
-        // actualiza alturas del gráfico circular vertical
+        // 4. Actualiza alturas del gráfico circular vertical (para la representación visual)
         document.getElementById("bioCircle").style.height = percent + "%";
-        document.getElementById("fossilCircle").style.height = fossil + "%";
+        document.getElementById("fossilCircle").style.height = D * 100 + "%"; 
 
-        // cálculo simple de reducción CO2
-        const reduction = percent * 0.018; 
-        document.getElementById("co2Value").textContent = reduction.toFixed(2);
+        // 5. Cálculo de Emisiones y Reducción
+        
+        // Emisión de la mezcla (kg CO2 / L)
+        const emisionMezcla = (D * EMISION_DIESEL_FOSIL) + (B * EMISION_BIODIESEL_NETA);
+
+        // Reducción ABSOLUTA (kg CO2 / L)
+        // Cuánto menos emite la mezcla que el diésel fósil puro
+        const reduccionAbsoluta = EMISION_DIESEL_FOSIL - emisionMezcla;
+
+        // Reducción PORCENTUAL
+        const reduccionPorcentual = (reduccionAbsoluta / EMISION_DIESEL_FOSIL) * 100;
+        
+        // 6. Mostrar resultados
+        document.getElementById("co2Value").innerHTML = `
+            <p style="margin: 0; font-size: 0.9em;">
+                Reducción **Absoluta** de $\\text{CO}_2$: 
+                <strong style="color: #4CAF50;">${reduccionAbsoluta.toFixed(3)} kg/L</strong>
+            </p>
+            <p style="margin: 5px 0 0 0; font-size: 0.9em;">
+                Reducción **Porcentual** Total: 
+                <strong style="color: #009688;">${reduccionPorcentual.toFixed(2)}%</strong>
+            </p>
+        `;
     }
 
+    // Event Listener para actualizar al mover el slider
     document.getElementById("blend2").addEventListener("input", updateBioSim);
 
-    // Ejecuta al cargar
+    // Ejecuta al cargar para mostrar los valores iniciales (B10)
     updateBioSim();
 </script>
+
+</body>
+</html>
