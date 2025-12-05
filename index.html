@@ -1,97 +1,90 @@
-<!-- MÓDULO VISUAL ILUSTRATIVO -->
-<div class="card" style="margin-top:12px;">
-  <h3>Representación ilustrativa del proceso</h3>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Simulador de Biocombustibles</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background: #f4f4f4;
+    }
+    .contenedor {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 500px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input { width: 100%; }
+    #resultado {
+        margin-top: 20px;
+        padding: 15px;
+        background: #e8f9e8;
+        border-left: 6px solid #22aa22;
+        border-radius: 6px;
+    }
+    canvas { margin-top: 25px; }
+</style>
+</head>
 
-  <div id="illustrationBox" style="text-align:center; padding:20px;">
-    <!-- Aquí se cargan las ilustraciones según el tipo de biocombustible -->
-  </div>
+<body>
+<div class="contenedor">
+    <h2>Simulador de Mezcla de Biocombustible</h2>
+    <p>Ajusta el porcentaje de materia orgánica (biocombustible) en la mezcla.</p>
 
-  <div class="muted" style="font-size:13px; margin-top:10px;">
-    Estas ilustraciones son esquemáticas y educativas, pensadas para acompañar la comprensión del proceso real.
-  </div>
+    <label>Materia orgánica (%): <span id="valor">0</span>%</label>
+    <input type="range" id="slider" min="0" max="100" value="0" />
+
+    <div id="resultado">
+        <strong>Emisiones estimadas de CO₂:</strong>
+        <p id="emisiones">100%</p>
+    </div>
+
+    <canvas id="grafico" width="400" height="200"></canvas>
 </div>
 
 <script>
-const illustrationBox = document.getElementById("illustrationBox");
+    const slider = document.getElementById("slider");
+    const valor = document.getElementById("valor");
+    const emisionesTexto = document.getElementById("emisiones");
+    const canvas = document.getElementById("grafico");
+    const ctx = canvas.getContext("2d");
 
-const illustrations = {
-  ethanol: `
-    <svg width="260" height="160" viewBox="0 0 260 160">
-      <!-- Fermentation tank -->
-      <rect x="40" y="20" width="80" height="120" rx="12" fill="#d8ebff" stroke="#0b74de" stroke-width="3"/>
-      <text x="80" y="90" text-anchor="middle" fill="#0b74de" font-size="14">Fermentador</text>
+    function actualizar() {
+        const bio = Number(slider.value);
+        valor.textContent = bio;
 
-      <!-- Arrow -->
-      <line x1="130" y1="80" x2="180" y2="80" stroke="#0b74de" stroke-width="3" marker-end="url(#arrow)"/>
+        // Fórmula educativa: cada 10% de biocombustible reduce 5% de CO2
+        const reduccion = bio * 0.5;
+        const emisiones = Math.max(100 - reduccion, 0);
 
-      <!-- Distillation column -->
-      <rect x="180" y="20" width="60" height="120" rx="10" fill="#ffeccd" stroke="#ff9f00" stroke-width="3"/>
-      <text x="210" y="90" text-anchor="middle" fill="#ff9f00" font-size="14">Destilación</text>
+        emisionesTexto.textContent = emisiones.toFixed(1) + "%";
 
-      <defs>
-        <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
-          <polygon points="0 0, 10 3, 0 6" fill="#0b74de"/>
-        </marker>
-      </defs>
-    </svg>
+        dibujarGrafico(emisiones);
+    }
 
-    <div style="margin-top:10px; font-size:14px;">
-      Proceso de <strong>fermentación</strong> y posterior <strong>destilación</strong> para obtener etanol.
-    </div>
-  `,
+    function dibujarGrafico(emisiones) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  biodiesel: `
-    <svg width="260" height="160" viewBox="0 0 260 160">
-      <!-- Oil container -->
-      <circle cx="60" cy="80" r="35" fill="#ffe4c4" stroke="#e68a00" stroke-width="3"/>
-      <text x="60" y="85" text-anchor="middle" fill="#e68a00" font-size="14">Aceites</text>
+        // Barra base (100% emisiones fósiles)
+        ctx.fillStyle = "#cccccc";
+        ctx.fillRect(50, 50, 300, 30);
 
-      <!-- Arrow -->
-      <line x1="100" y1="80" x2="150" y2="80" stroke="#e68a00" stroke-width="3" marker-end="url(#arrowBio)"/>
+        // Barra con mezcla
+        ctx.fillStyle = "#4CAF50";
+        const ancho = (emisiones / 100) * 300;
+        ctx.fillRect(50, 100, ancho, 30);
 
-      <!-- Reactor -->
-      <rect x="150" y="25" width="80" height="110" rx="12" fill="#e0ffe0" stroke="#18a418" stroke-width="3"/>
-      <text x="190" y="90" text-anchor="middle" fill="#18a418" font-size="14">Reactor</text>
+        ctx.fillStyle = "#000";
+        ctx.fillText("100% (solo fósil)", 50, 45);
+        ctx.fillText(emisiones.toFixed(1) + "% (mezcla actual)", 50, 145);
+    }
 
-      <defs>
-        <marker id="arrowBio" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
-          <polygon points="0 0, 10 3, 0 6" fill="#e68a00"/>
-        </marker>
-      </defs>
-    </svg>
-
-    <div style="margin-top:10px; font-size:14px;">
-      Representación del proceso de <strong>transesterificación</strong> para producir biodiésel.
-    </div>
-  `,
-
-  biogas: `
-    <svg width="260" height="160" viewBox="0 0 260 160">
-      <!-- Digester -->
-      <ellipse cx="130" cy="90" rx="80" ry="45" fill="#e6ffe6" stroke="#06a300" stroke-width="3"></ellipse>
-      <text x="130" y="95" text-anchor="middle" fill="#06a300" font-size="14">Biodigestor</text>
-
-      <!-- Gas bubble -->
-      <circle cx="210" cy="40" r="20" fill="#c9f7c9" stroke="#06a300" stroke-width="3"></circle>
-      <text x="210" y="43" text-anchor="middle" fill="#06a300" font-size="13">CH₄</text>
-
-      <!-- Pipe -->
-      <line x1="175" y1="65" x2="210" y2="40" stroke="#06a300" stroke-width="4" />
-
-    </svg>
-
-    <div style="margin-top:10px; font-size:14px;">
-      Esquema del proceso de <strong>digestión anaerobia</strong> para producir biogás.
-    </div>
-  `,
-};
-
-// actualización cuando cambia el tipo de biocombustible
-fuelType.addEventListener("change", () => {
-  illustrationBox.innerHTML = illustrations[fuelType.value];
-});
-
-// inicial
-illustrationBox.innerHTML = illustrations[fuelType.value];
+    slider.addEventListener("input", actualizar);
+    actualizar();
 </script>
 
+</body>
+</html>
